@@ -1,6 +1,26 @@
 import { Rnd } from 'react-rnd'
 import { useWindowStore } from '../../stores/windowStore'
 import type { WindowState } from '@agentic-os/types'
+import Finder from '../apps/Finder'
+import Terminal from '../apps/Terminal'
+import TextEdit from '../apps/TextEdit'
+
+function AppContent({ appId }: { appId: string }) {
+  switch (appId) {
+    case 'finder':
+      return <Finder />
+    case 'terminal':
+      return <Terminal />
+    case 'text-edit':
+      return <TextEdit />
+    default:
+      return (
+        <div className="flex items-center justify-center w-full h-full text-white/30 text-sm">
+          [{appId}] — coming soon
+        </div>
+      )
+  }
+}
 
 export default function WindowLayer() {
   const windows = useWindowStore((s) => s.windows)
@@ -58,8 +78,8 @@ function WindowFrame({ win }: { win: WindowState }) {
         </div>
 
         {/* Content area */}
-        <div className="flex-1 overflow-auto p-4 text-white/50 text-sm">
-          [{win.appId}] — coming soon
+        <div className="flex-1 overflow-hidden">
+          <AppContent appId={win.appId} />
         </div>
       </div>
     </Rnd>
