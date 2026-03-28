@@ -1,0 +1,17 @@
+{
+  "name": "agentic-os",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared/types"
+  ],
+  "scripts": {
+    "dev:frontend": "bun --cwd frontend run dev",
+    "dev:backend": "bun --cwd backend run dev",
+    "dev": "bun run dev:frontend & bun run dev:backend",
+    "build": "bun --cwd frontend run build",
+    "install:all": "bun install"
+  }
+}
