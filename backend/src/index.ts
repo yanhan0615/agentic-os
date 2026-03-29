@@ -4,6 +4,7 @@ import { logger } from 'hono/logger'
 import { fsRouter } from './routes/fs'
 import { agentRouter } from './routes/agent'
 import { systemRouter } from './routes/system'
+import { wallpaperRouter } from './routes/wallpaper'
 
 const app = new Hono().basePath('/agentic-os/api')
 
@@ -15,6 +16,7 @@ app.use('*', cors({ origin: '*' }))
 app.route('/fs', fsRouter)
 app.route('/agent', agentRouter)
 app.route('/system', systemRouter)
+app.route('/wallpaper', wallpaperRouter)
 
 // Health check
 app.get('/health', (c) => c.json({ status: 'ok', version: '0.1.0' }))
