@@ -39,16 +39,6 @@ export async function getWallpaperUrl(todayDate: string): Promise<string | null>
     // Network error or backend down — fall through
   }
 
-  // 2. Try Picsum (directly accessible, CORS-friendly)
-  try {
-    const picsumUrl = getPicsumUrl(todayDate)
-    // Verify the URL is reachable with a HEAD request
-    const probe = await fetch(picsumUrl, { method: 'HEAD' })
-    if (probe.ok) return picsumUrl
-  } catch {
-    // Fall through
-  }
-
-  // 3. All sources failed
-  return null
+  // 2. Picsum — deterministic URL, no network probe needed
+  return getPicsumUrl(todayDate)
 }

@@ -93,11 +93,13 @@ export const useWallpaperStore = create<WallpaperState>()(
         return
       }
 
+      // Cache miss — prune stale entries before fetching fresh data
+      pruneOldCache()
+
       // Fetch from service
       set((s) => {
         s.status = 'loading'
       })
-      pruneOldCache()
 
       const url = await getWallpaperUrl(today)
 
