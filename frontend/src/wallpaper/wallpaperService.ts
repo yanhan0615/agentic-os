@@ -16,11 +16,11 @@ interface BingProxyResponse {
   date?: string
 }
 
-/** Returns a stable Picsum URL for a given date string (YYYY-MM-DD) */
+/** Returns the backend-proxied Picsum URL for a given date string (YYYY-MM-DD) */
 function getPicsumUrl(date: string): string {
-  // Derive a numeric seed from the date for day-stable randomness
-  const seed = date.replace(/-/g, '')
-  return `https://picsum.photos/seed/${seed}/3840/2160`
+  // Route through our backend proxy to avoid Picsum's missing CORS headers.
+  // Direct browser fetches to picsum.photos are blocked (no Access-Control-Allow-Origin).
+  return `/agentic-os/api/wallpaper/picsum?date=${date}`
 }
 
 /**
