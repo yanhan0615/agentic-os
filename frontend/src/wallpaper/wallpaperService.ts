@@ -3,11 +3,14 @@
  *
  * Fallback chain:
  *   1. Backend proxy → Bing daily wallpaper (4K UHD)
- *   2. Picsum Photos (seeded by date, consistent per day)
- *   3. null (caller handles graceful degradation)
+ *   2. Backend proxy → Picsum Photos (CORS-safe, seeded by date)
+ *   3. null (caller handles graceful degradation to CSS gradient)
+ *
+ * All image fetches go through the backend to avoid CORS restrictions.
+ * Picsum does not set Access-Control-Allow-Origin on direct image responses.
  */
 
-const WALLPAPER_API = '/agentic-os/api/wallpaper/today'
+const API_BASE = '/agentic-os/api/wallpaper'
 
 interface BingProxyResponse {
   url: string
@@ -16,21 +19,14 @@ interface BingProxyResponse {
   date?: string
 }
 
-/** Returns a stable Picsum URL for a given date string (YYYY-MM-DD) */
-function getPicsumUrl(date: string): string {
-  // Derive a numeric seed from the date for day-stable randomness
-  const seed = date.replace(/-/g, '')
-  return `https://picsum.photos/seed/${seed}/3840/2160`
-}
-
 /**
  * Fetch today's wallpaper URL.
  * Returns null only if ALL fallbacks fail.
  */
 export async function getWallpaperUrl(todayDate: string): Promise<string | null> {
-  // 1. Try backend proxy (Bing)
+  // 1. Try Bing via backend proxy — returns a JSON with the image URL
   try {
-    const res = await fetch(WALLPAPER_API)
+    const res = await fetch(`${API_BASE}/today`)
     if (res.ok) {
       const data = (await res.json()) as BingProxyResponse
       if (data?.url) return data.url
@@ -39,6 +35,7 @@ export async function getWallpaperUrl(todayDate: string): Promise<string | null>
     // Network error or backend down — fall through
   }
 
-  // 2. Picsum — deterministic URL, no network probe needed
-  return getPicsumUrl(todayDate)
+  // 2. Picsum via backend proxy — backend streams the image, no CORS issue
+  // Return the proxy URL directly; the browser fetches it as a same-origin request.
+  return `${API_BASE}/picsum?date=${todayDate}`
 }

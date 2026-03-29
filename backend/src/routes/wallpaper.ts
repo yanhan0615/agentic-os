@@ -47,3 +47,38 @@ wallpaperRouter.get('/today', async (c) => {
     return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Proxy request failed' } }, 500)
   }
 })
+
+/**
+ * GET /wallpaper/picsum?date=YYYY-MM-DD
+ * Proxies a Picsum Photos image to avoid browser CORS restrictions.
+ * Picsum does not set Access-Control-Allow-Origin on image responses,
+ * so the browser cannot fetch them directly from a cross-origin page.
+ * The backend fetches the image and streams it back with proper headers.
+ */
+wallpaperRouter.get('/picsum', async (c) => {
+  const date = c.req.query('date') ?? new Date().toISOString().slice(0, 10)
+  const seed = date.replace(/-/g, '')
+  const picsumUrl = `https://picsum.photos/seed/${seed}/3840/2160`
+
+  try {
+    const res = await fetch(picsumUrl)
+    if (!res.ok) {
+      return c.json({ error: { code: 'PICSUM_FETCH_FAILED', message: 'Failed to fetch Picsum image' } }, 502)
+    }
+
+    const contentType = res.headers.get('content-type') ?? 'image/jpeg'
+    const arrayBuffer = await res.arrayBuffer()
+
+    return new Response(arrayBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=86400', // cache 24h — same image all day
+        'Access-Control-Allow-Origin': '*',
+      },
+    })
+  } catch (err) {
+    console.error('[wallpaper] Error proxying Picsum:', err)
+    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Picsum proxy failed' } }, 500)
+  }
+})
