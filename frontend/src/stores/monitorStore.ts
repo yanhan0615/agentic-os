@@ -96,22 +96,27 @@ export const useMonitorStore = create<MonitorState & MonitorActions>((set, get) 
 
       es = new EventSource(`${API_BASE}/sessions/stream`)
 
-      const handleData = (sessions: AgentSession[], fetchedAt: number) => {
-        set({ sessions, lastFetchedAt: fetchedAt, error: null })
-      }
-
       es.addEventListener('snapshot', (e) => {
         try {
           const data = JSON.parse((e as MessageEvent).data) as { sessions: AgentSession[]; fetchedAt: number }
           stopPolling() // SSE is working, no need for polling
-          handleData(data.sessions, data.fetchedAt)
+          set({ sessions: data.sessions, lastFetchedAt: data.fetchedAt, error: null })
         } catch { /* ignore parse errors */ }
       })
 
       es.addEventListener('delta', (e) => {
         try {
           const data = JSON.parse((e as MessageEvent).data) as { sessions: AgentSession[]; fetchedAt: number }
-          handleData(data.sessions, data.fetchedAt)
+          if (data.sessions.length === 0) return
+          // Merge delta: only update changed sessions, preserve the rest
+          set((state) => ({
+            sessions: state.sessions.map((s) => {
+              const updated = data.sessions.find((d) => d.id === s.id)
+              return updated ?? s
+            }),
+            lastFetchedAt: data.fetchedAt,
+            error: null,
+          }))
         } catch { /* ignore parse errors */ }
       })
 
