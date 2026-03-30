@@ -1,10 +1,15 @@
 import { useWindowStore } from '../../stores/windowStore'
 
 const DOCK_APPS = [
-  { id: 'finder', name: 'Finder', emoji: '📁' },
-  { id: 'terminal', name: 'Terminal', emoji: '🖥️' },
-  { id: 'text-edit', name: 'TextEdit', emoji: '📝' },
+  { id: 'finder',        name: 'Finder',        emoji: '📁' },
+  { id: 'terminal',      name: 'Terminal',      emoji: '🖥️' },
+  { id: 'text-edit',     name: 'TextEdit',      emoji: '📝' },
+  { id: 'agent-monitor', name: 'Agent Monitor', emoji: '🤖' },
 ]
+
+const APP_SIZES: Record<string, { width: number; height: number }> = {
+  'agent-monitor': { width: 900, height: 600 },
+}
 
 export default function Dock() {
   const openWindow = useWindowStore((s) => s.openWindow)
@@ -16,7 +21,7 @@ export default function Dock() {
           <button
             key={app.id}
             title={app.name}
-            onClick={() => openWindow(app.id, app.name)}
+            onClick={() => openWindow(app.id, app.name, APP_SIZES[app.id])}
             className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl
                        hover:scale-125 transition-transform duration-150 cursor-pointer
                        bg-white/10 hover:bg-white/20"
