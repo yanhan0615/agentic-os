@@ -38,6 +38,32 @@ export interface Notification {
   read: boolean
 }
 
+// ─── Monitor ──────────────────────────────────────────────────────────────────
+
+export interface SessionMessage {
+  role: 'user' | 'assistant'
+  preview: string
+  timestamp: number
+}
+
+export interface AgentSession {
+  id: string
+  agentId: string
+  agentName: string
+  status: 'active' | 'idle' | 'error' | 'terminated'
+  currentTask: string | null
+  startedAt: number
+  durationMs: number
+  model: string
+  usage: {
+    inputTokens: number
+    outputTokens: number
+    totalTokens: number
+    estimatedCostUsd: number
+  }
+  recentMessages?: SessionMessage[]
+}
+
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 export interface ApiError {
