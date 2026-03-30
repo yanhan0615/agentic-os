@@ -75,6 +75,7 @@ export const useMonitorStore = create<MonitorState & MonitorActions>((set, get) 
 
     const startPolling = () => {
       stopPolling()
+      if (!get().autoRefresh) return
       pollTimer = setInterval(() => {
         if (get().autoRefresh) {
           get().fetchSessions()
