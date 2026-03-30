@@ -102,12 +102,13 @@ monitorRouter.get('/sessions', async (c) => {
 monitorRouter.get('/sessions/stream', async (c) => {
   return streamSSE(c, async (stream) => {
     // Initial snapshot
+    let lastSnapshot: AgentSession[] = []
     try {
       const raw = await fetchOpenClawSessions()
-      const sessions = raw.map(toAgentSession)
+      lastSnapshot = raw.map(toAgentSession)
       await stream.writeSSE({
         event: 'snapshot',
-        data: JSON.stringify({ sessions, total: sessions.length, fetchedAt: Date.now() }),
+        data: JSON.stringify({ sessions: lastSnapshot, total: lastSnapshot.length, fetchedAt: Date.now() }),
       })
     } catch (err) {
       await stream.writeSSE({
@@ -125,13 +126,20 @@ monitorRouter.get('/sessions/stream', async (c) => {
         // Heartbeat every 30s
         await stream.writeSSE({ event: 'heartbeat', data: String(Date.now()) })
       } else {
-        // Delta every 5s (for now: full snapshot as delta; real delta can be layered later)
+        // Delta every 5s — only changed sessions
         try {
           const raw = await fetchOpenClawSessions()
-          const sessions = raw.map(toAgentSession)
+          const current = raw.map(toAgentSession)
+          const changed = current.filter((s) => {
+            const prev = lastSnapshot.find((p) => p.id === s.id)
+            if (!prev) return true // new session
+            return JSON.stringify(s) !== JSON.stringify(prev)
+          })
+          lastSnapshot = current
+          // Always push delta (empty array = no change)
           await stream.writeSSE({
             event: 'delta',
-            data: JSON.stringify({ sessions, total: sessions.length, fetchedAt: Date.now() }),
+            data: JSON.stringify({ sessions: changed, fetchedAt: Date.now() }),
           })
         } catch {
           // Don't break the stream on transient errors
