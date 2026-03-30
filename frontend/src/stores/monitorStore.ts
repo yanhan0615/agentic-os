@@ -108,16 +108,13 @@ export const useMonitorStore = create<MonitorState & MonitorActions>((set, get) 
         try {
           const data = JSON.parse((e as MessageEvent).data) as { sessions: AgentSession[]; fetchedAt: number }
           if (data.sessions.length === 0) return
-          // Merge delta: only update changed sessions, preserve the rest
-          set((state) => ({
-            sessions: state.sessions.map((s) => {
-              const updated = data.sessions.find((d) => d.id === s.id)
-              return updated ?? s
-            }),
-            lastFetchedAt: data.fetchedAt,
-            error: null,
-          }))
-        } catch { /* ignore parse errors */ }
+          // Upsert: update existing sessions and add new ones, never drop others
+          set((state) => {
+            const map = new Map(state.sessions.map((s) => [s.id, s]))
+            for (const s of data.sessions) map.set(s.id, s)
+            return { sessions: Array.from(map.values()), lastFetchedAt: data.fetchedAt }
+          })
+        } catch { /* ignore */ }
       })
 
       es.addEventListener('heartbeat', () => {
