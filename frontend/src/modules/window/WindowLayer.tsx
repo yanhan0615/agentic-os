@@ -4,6 +4,7 @@ import type { WindowState } from '@agentic-os/types'
 import Finder from '../apps/Finder'
 import Terminal from '../apps/Terminal'
 import TextEdit from '../apps/TextEdit'
+import AgentMonitor from '../apps/monitor/AgentMonitor'
 
 function AppContent({ appId }: { appId: string }) {
   switch (appId) {
@@ -13,6 +14,8 @@ function AppContent({ appId }: { appId: string }) {
       return <Terminal />
     case 'text-edit':
       return <TextEdit />
+    case 'agent-monitor':
+      return <AgentMonitor />
     default:
       return (
         <div className="flex items-center justify-center w-full h-full text-white/30 text-sm">

@@ -7,7 +7,7 @@ let nextZ = 100
 
 interface WindowStore {
   windows: WindowState[]
-  openWindow: (appId: string, title: string) => void
+  openWindow: (appId: string, title: string, size?: { width: number; height: number }) => void
   closeWindow: (id: string) => void
   focusWindow: (id: string) => void
   updateWindow: (id: string, patch: Partial<WindowState>) => void
@@ -17,7 +17,7 @@ export const useWindowStore = create<WindowStore>()(
   immer((set) => ({
     windows: [],
 
-    openWindow: (appId, title) =>
+    openWindow: (appId, title, size) =>
       set((state) => {
         state.windows.push({
           id: `win-${nextId++}`,
@@ -25,8 +25,8 @@ export const useWindowStore = create<WindowStore>()(
           title,
           x: 80 + (nextId % 5) * 30,
           y: 40 + (nextId % 5) * 30,
-          width: 680,
-          height: 460,
+          width: size?.width ?? 680,
+          height: size?.height ?? 460,
           zIndex: ++nextZ,
           focused: true,
           minimized: false,
