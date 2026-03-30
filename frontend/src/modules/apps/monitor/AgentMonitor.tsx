@@ -11,7 +11,6 @@ export default function AgentMonitor() {
     isLoading,
     error,
     selectedSessionId,
-    autoRefresh,
     fetchSessions,
     selectSession,
     connectSSE,
@@ -20,20 +19,13 @@ export default function AgentMonitor() {
   const sessions = useMonitorStore(selectFilteredSessions)
   const selectedSession = useMonitorStore(selectCurrentSession)
 
-  // On mount: initial fetch + connect SSE; cleanup on unmount
+  // On mount: initial fetch + connect SSE (SSE internally handles polling fallback)
+  // cleanup on unmount disconnects SSE and clears any polling timers
   useEffect(() => {
     fetchSessions()
     const cleanup = connectSSE()
     return cleanup
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Polling fallback when autoRefresh is on but SSE is not active
-  // (connectSSE handles this internally; this is just a safety net)
-  useEffect(() => {
-    if (!autoRefresh) return
-    const id = setInterval(() => fetchSessions(), 5000)
-    return () => clearInterval(id)
-  }, [autoRefresh]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex flex-col h-full bg-gray-900/95 text-white select-none overflow-hidden">
