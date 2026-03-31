@@ -110,7 +110,17 @@ export const useMonitorStore = create<MonitorState & MonitorActions>((set, get) 
       es.addEventListener('delta', (e) => {
         try {
           const data = JSON.parse((e as MessageEvent).data) as { sessions: AgentSession[]; fetchedAt: number }
-          handleData(data.sessions, data.fetchedAt)
+          if (data.sessions.length === 0) return // no changes
+          // Merge delta into existing sessions list
+          set((state) => {
+            const updated = [...state.sessions]
+            for (const s of data.sessions) {
+              const idx = updated.findIndex((p) => p.id === s.id)
+              if (idx >= 0) updated[idx] = s
+              else updated.push(s) // new session
+            }
+            return { sessions: updated, lastFetchedAt: data.fetchedAt, error: null }
+          })
         } catch { /* ignore parse errors */ }
       })
 
